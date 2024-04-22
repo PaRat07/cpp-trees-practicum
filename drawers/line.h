@@ -6,6 +6,8 @@
 class LineShape : public sf::Drawable {
 public:
     LineShape(sf::Vector2f from, sf::Vector2f to)
+        : from_(from)
+        , to_(to)
     {}
 
     void setFillColor(sf::Color color) {

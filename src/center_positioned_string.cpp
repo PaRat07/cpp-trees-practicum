@@ -20,7 +20,7 @@ void CenterPositionedString::draw(sf::RenderTarget &target, sf::RenderStates sta
     sf::Text val;
     val.setFont(font);
     val.setFillColor(text_color_);
-    val.setCharacterSize(letter_size);
+    val.setCharacterSize(font_size_);
     val.setString(data_);
     val.setPosition(pos_.x - val.getLocalBounds().width / 2, pos_.y - letter_size * 0.7);
     target.draw(val);

@@ -12,11 +12,9 @@ FetchContent_MakeAvailable(SFML)
 
 set(CORE
         src/cartesian_tree.cpp
-        src/trees_drawer.cpp
-        core/physics/vector_operations.h
-        drawers/line.h
-        core/trees/avl_tree.h
-        core/trees/rb_tree.h
+        src/tree_drawer.cpp
+        src/vector_operations.cpp
+        src/avl_tree.cpp
 )
 
 add_executable(${PROJECT_NAME}
@@ -36,5 +34,4 @@ add_executable(${PROJECT_NAME}
         ${CORE}
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE polynom)
 target_link_libraries(${PROJECT_NAME} PRIVATE sfml-graphics)

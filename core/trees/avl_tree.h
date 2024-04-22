@@ -2,59 +2,85 @@
 
 #include <functional>
 
-template<class Val, class Cmp = std::less<>>
+using Val = int64_t;
+
+
+template<class Cmp = std::less<>>
 class AvlSet {
 public:
-
     struct AvlNode : public TreesDrawer::Node {
-        const std::unique_ptr<Node> &GetLeft() const override {
-            return left;
+        AvlNode(int64_t val)
+            : TreesDrawer::Node(val)
+        {}
+
+        const TreesDrawer::Node *GetLeft() const override {
+            return left.get();
         }
-        const std::unique_ptr<Node> &GetRight() const override {
-            return right;
+        const TreesDrawer::Node *GetRight() const override {
+            return right.get();
         }
-        const Node *GetParent() const override {
-            return par;
+
+        void ProcessEvent(sf::Event event) override {
+
+        }
+
+        void draw(sf::RenderTarget& target, sf::RenderStates states) const override {
+
         }
 
         int height = 1;
         std::unique_ptr<AvlNode> left, right;
-        const AvlNode *par;
     };
 
-    void Insert(Val v) {
-        root_ = Insert(root_, v);
+    template<class T>
+    void Insert(T &&v) {
+        std::lock_guard lock(operation_);
+        Insert(root_, std::forward<T>(v));
     }
 
     void Erase(Val v) {
-        root_ = Erase(root_, v);
+        std::lock_guard lock(operation_);
+        Erase(root_, v);
     }
 
-    const std::unique_ptr<TreesDrawer::Node> &GetRoot() const {
+    const std::unique_ptr<AvlNode> &GetRoot() const {
         return root_;
     }
 
-private:
-    std::unique_ptr<AvlNode> root_;
+    void SetCallBacks(std::function<void()> &&cb_beg, std::function<void(const AvlNode*)> &&cb_end) {
+        cb_begin_transaction_ = std::move(cb_beg);
+        cb_end_transaction_ = std::move(cb_end);
+    }
 
-    static std::unique_ptr<TreesDrawer::Node> Insert(std::unique_ptr<AvlNode> root, Val v) {
+private:
+    std::function<void()> cb_begin_transaction_ = [] () {};
+    std::function<void(const AvlNode*)> cb_end_transaction_ = [] (const AvlNode*) {};
+    std::unique_ptr<AvlNode> root_;
+    std::mutex operation_;
+
+    template<class T>
+    void Insert(std::unique_ptr<AvlNode> &root, T &&v) {
         if (root == nullptr) {
-            return nullptr;
+            cb_begin_transaction_();
+            root = std::make_unique<AvlNode>(std::forward<T>(v));
+            cb_end_transaction_(root_.get());
+            UpdH(root);
+            return;
         }
-        if (Cmp { } (v, root->val)) {
-            root->left = Insert(root->l, v);
+        if (Cmp()(v, root->val)) {
+            Insert(root->left, std::forward<T>(v));
         } else if (Cmp { } (root->val, v)) {
-            root->r = Insert(root->r, v);
+            Insert(root->right, std::forward<T>(v));
         }
         UpdH(root);
-        return Rebalance(root);
+        Rebalance(root);
     }
 
     static std::unique_ptr<AvlNode> Begin(std::unique_ptr<AvlNode> root) {
         return root ? root->l ? Begin(root->l) : root : nullptr;
     }
 
-    static void UpdH(std::unique_ptr<AvlNode> root) {
+    static void UpdH(std::unique_ptr<AvlNode> &root) {
         root->height = 1;
         if (root->left) {
             root->height = std::max(root->height, root->left->height + 1);
@@ -64,84 +90,95 @@ private:
         }
     }
 
-    static std::unique_ptr<AvlNode> Erase(std::unique_ptr<AvlNode> root, Val val) {
+    void Erase(std::unique_ptr<AvlNode> &root, Val val) {
         if (root == nullptr) {
-            return nullptr;
+            return;
         } else if (Cmp { } (root->val, val)) {
-            root->right = Erase(root->right, val);
+            Erase(root->right, val);
             UpdH(root);
-            return Rebalance(root);
+            Rebalance(root);
         } else if (Cmp { } (val, root->val)) {
-            root->left = Erase(root->left, val);
+            Erase(root->left, val);
             UpdH(root);
-            return Rebalance(root);
+            Rebalance(root);
         } else if (root->left != nullptr && root->right != nullptr) {
+            cb_begin_transaction_();
             root->val = Begin(root->right)->val;
-            root->right = Erase(root->right, root->val);
+            cb_end_transaction_(root_.get());
+            Erase(root->right, root->val);
             UpdH(root);
-            return Rebalance(root);
+            Rebalance(root);
         } else if (root->left != nullptr) {
-            std::unique_ptr<AvlNode> ptr = root->left;
-            delete root;
-            return ptr;
+            cb_begin_transaction_();
+            root = root->left;
+            cb_end_transaction_(root_.get());
         } else {
-            std::unique_ptr<AvlNode> ptr = root->right;
-            delete root;
-            return ptr;
+            cb_begin_transaction_();
+            root = root->right;
+            cb_end_transaction_(root_.get());
         }
     }
 
-    static int GetH(std::unique_ptr<AvlNode> v) {
+    static int GetH(const std::unique_ptr<AvlNode> &v) {
         return v ? v->height : 0;
     }
 
-    static int Diff(std::unique_ptr<AvlNode> v) {
+    static int Diff(const std::unique_ptr<AvlNode> &v) {
         return v ? GetH(v->left) - GetH(v->right) : 0;
     }
 
-    static std::unique_ptr<AvlNode> Rebalance(std::unique_ptr<AvlNode> root) {
-        if (Diff(root) == 2) {
-            if (Diff(root->left) == -1) {
-                std::unique_ptr<AvlNode> new_root = root->left->right;
-                root->left->right = new_root->left;
-                new_root->left = root->left;
-                root->left = new_root->right;
-                new_root->right = root;
+    void Rebalance(std::unique_ptr<AvlNode> &root) {
+        std::unique_ptr<AvlNode> root_m = std::move(root);
+        if (Diff(root_m) == 2) {
+            if (Diff(root_m->left) == -1) {
+                cb_begin_transaction_();
+                std::unique_ptr<AvlNode> new_root = std::move(root_m->left->right);
+                root_m->left->right = std::move(new_root->left);
+                new_root->left = std::move(root_m->left);
+                root_m->left = std::move(new_root->right);
+                new_root->right = std::move(root_m);
                 UpdH(new_root->left);
                 UpdH(new_root->right);
                 UpdH(new_root);
-                return new_root;
+                root = std::move(new_root);
+                cb_end_transaction_(root_.get());
             } else {
-                std::unique_ptr<AvlNode> new_root = root->left;
-                root->left = new_root->right;
-                new_root->right = root;
+                cb_begin_transaction_();
+                std::unique_ptr<AvlNode> new_root = std::move(root_m->left);
+                root_m->left = std::move(new_root->right);
+                new_root->right = std::move(root_m);
                 UpdH(new_root->left);
                 UpdH(new_root->right);
                 UpdH(new_root);
-                return new_root;
+                root = std::move(new_root);
+                cb_end_transaction_(root_.get());
             }
-        } else if (Diff(root) == -2) {
-            if (Diff(root->right) == 1) {
-                std::unique_ptr<AvlNode> new_root = root->right->left;
-                root->right->left = new_root->right;
-                new_root->right = root->right;
-                root->right = new_root->left;
-                new_root->left = root;
+        } else if (Diff(root_m) == -2) {
+            if (Diff(root_m->right) == 1) {
+                cb_begin_transaction_();
+                std::unique_ptr<AvlNode> new_root = std::move(root_m->right->left);
+                root_m->right->left = std::move(new_root->right);
+                new_root->right = std::move(root_m->right);
+                root_m->right = std::move(new_root->left);
+                new_root->left = std::move(root_m);
                 UpdH(new_root->right);
                 UpdH(new_root->left);
                 UpdH(new_root);
-                return new_root;
+                root = std::move(new_root);
+                cb_end_transaction_(root_.get());
             } else {
-                std::unique_ptr<AvlNode> new_root = root->right;
-                root->right = new_root->left;
-                new_root->left = root;
+                cb_begin_transaction_();
+                std::unique_ptr<AvlNode> new_root = std::move(root_m->right);
+                root_m->right = std::move(new_root->left);
+                new_root->left = std::move(root_m);
                 UpdH(new_root->left);
                 UpdH(new_root->right);
                 UpdH(new_root);
-                return new_root;
+                root = std::move(new_root);
+                cb_end_transaction_(root_.get());
             }
         } else {
-            return root;
+            root = std::move(root_m);
         }
     }
 };

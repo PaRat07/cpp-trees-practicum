@@ -20,8 +20,13 @@ class CenterPositionedString : public sf::Drawable {
     void setTextColor(sf::Color color) {
         text_color_ = color;
     }
+
+    void SetFontSize(float font_size) {
+        font_size_ = font_size;
+    }
  private:
     sf::Color text_color_ = on_primary_container;
     sf::String data_;
+    float font_size_ = 30;
     sf::Vector2f pos_ = { 0, 0 };
 };

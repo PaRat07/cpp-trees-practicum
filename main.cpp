@@ -21,7 +21,7 @@ int main() {
     tab.AddElement(std::make_unique<ButtonWithTextAbsPos>(sf::Vector2f(10, 10), sf::Vector2f(70, 45), "Add",
                                                         [&new_elem, &drawer = *drawer, &avl_set] () {
         std::thread([&] () {
-            avl_set.Insert(++new_elem);
+            for (int i = 0; i < 10; ++i) avl_set.Insert(++new_elem);
         }).detach();
     }));
     tab.AddElement(std::move(drawer));

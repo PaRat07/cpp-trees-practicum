@@ -3,6 +3,7 @@
 #include <memory>
 #include <chrono>
 #include <cmath>
+#include <random>
 
 #include "../../app/tab.h"
 #include "vector_operations.h"
@@ -23,7 +24,7 @@ public:
 
     private:
         mutable sf::Vector2f speed = {0, 0};
-        mutable sf::Vector2f pos = {500, 500};
+        mutable sf::Vector2f pos = GetRandomPoint();
     };
 
     TreesDrawer(sf::Vector2f pos, sf::Vector2f size, const Node *root);
@@ -38,7 +39,7 @@ public:
 
 private:
     float zoom_ = 1;
-    sf::Vector2f pos_, size_;
+    sf::Vector2f pos_, size_, pos_in_;
     const Node *root_;
     const Node *grabbed_ = nullptr;
     mutable std::mutex transaction_;
@@ -46,14 +47,15 @@ private:
 
     static constexpr float RADIUS = 50;
     static constexpr float K_FOR_EDGES = 50;
-    static constexpr float G_FOR_GRAVITY = 2;
-    static constexpr float G_FOR_CHILD_POWER = 1.5;
+    static constexpr float G_FOR_GRAVITY = 10;
+    static constexpr float G_FOR_CHILD_POWER = 4;
     static constexpr float G_FOR_EDGES = 5;
     static constexpr float G_FOR_VERTEX = 10;
     static constexpr float M_OF_VERTEX = 1e4;
 
     static std::vector<const Node*> AllNodes(const Node *root);
     static size_t GetSubtreeSize(const Node *root);
+    static sf::Vector2f GetRandomPoint();
 
     void DoPhysics(const std::vector<const Node*> &nodes) const;
 };

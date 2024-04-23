@@ -15,11 +15,11 @@ TreesDrawer::TreesDrawer(sf::Vector2f pos, sf::Vector2f size, const TreesDrawer:
 void TreesDrawer::ProcessEvent(sf::Event event) {
     switch (event.type) {
         case sf::Event::MouseButtonPressed: {
-            sf::Vector2f touch_pos(event.mouseButton.x / zoom_ - pos_.x, event.mouseButton.y / zoom_ - pos_.y);
+            sf::Vector2f touch_pos(event.mouseButton.x - pos_.x, event.mouseButton.y - pos_.y);
             std::lock_guard lock(transaction_);
             auto nodes = AllNodes(root_);
             for (const auto &i: nodes) {
-                if (CalcLength(i->pos - touch_pos) <= RADIUS) {
+                if (CalcLength((i->pos - pos_in_) * zoom_ - touch_pos) <= RADIUS * std::sqrt(zoom_)) {
                     grabbed_ = i;
                 }
             }
@@ -31,13 +31,13 @@ void TreesDrawer::ProcessEvent(sf::Event event) {
         }
         case sf::Event::MouseMoved: {
             if (grabbed_ != nullptr) {
-                grabbed_->pos = sf::Vector2f(event.mouseMove.x / zoom_ - pos_.x, event.mouseMove.y / zoom_ - pos_.y);
+                grabbed_->pos = sf::Vector2f((event.mouseMove.x - pos_.x) / zoom_ + pos_in_.x, (event.mouseMove.y - pos_.y) / zoom_ + pos_in_.y);
             }
             break;
         }
         case sf::Event::MouseWheelScrolled: {
-            float new_zoom = zoom_ * std::pow(0.99, event.mouseWheelScroll.delta);
-            pos_ = (pos_ + sf::Vector2f(event.mouseWheelScroll.x, event.mouseWheelScroll.y)) / new_zoom * zoom_ - sf::Vector2f(event.mouseWheelScroll.x, event.mouseWheelScroll.y);
+            float new_zoom = zoom_ * std::pow(0.9, event.mouseWheelScroll.delta);
+            pos_in_ += (sf::Vector2f(event.mouseWheelScroll.x, event.mouseWheelScroll.y) - pos_) / zoom_ - (sf::Vector2f(event.mouseWheelScroll.x, event.mouseWheelScroll.y) - pos_) / new_zoom;
             zoom_ = new_zoom;
             break;
         }
@@ -59,13 +59,13 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
 
     for (const auto &i : nodes) {
         if (i->GetLeft()) {
-            LineShape line((i->pos + pos_) * zoom_, (i->GetLeft()->pos + pos_) * zoom_);
+            LineShape line((i->pos - pos_in_) * zoom_ + pos_, (i->GetLeft()->pos - pos_in_) * zoom_ + pos_);
             line.setFillColor(sf::Color::Red);
             line.setThickness(5);
             target.draw(line);
         }
         if (i->GetRight()) {
-            LineShape line((i->pos + pos_) * zoom_, (i->GetRight()->pos + pos_) * zoom_);
+            LineShape line((i->pos - pos_in_) * zoom_ + pos_, (i->GetRight()->pos - pos_in_) * zoom_ + pos_);
             line.setFillColor(sf::Color::Red);
             line.setThickness(5);
             target.draw(line);
@@ -74,17 +74,18 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
 
     for (const auto &i : nodes) {
         {
-            sf::CircleShape vertex(RADIUS * zoom_);
-            vertex.setPosition((i->pos + pos_ - sf::Vector2f(RADIUS, RADIUS)) * zoom_);
+            sf::CircleShape vertex(RADIUS * std::sqrt(zoom_));
+            vertex.setPosition((i->pos - pos_in_) * zoom_ + pos_ - sf::Vector2f(RADIUS, RADIUS) * std::sqrt(zoom_));
             vertex.setFillColor(primary);
             target.draw(vertex);
         }
         {
-            CenterPositionedString str;
-            str.setPosition((i->pos + pos_) * zoom_);
+            sf::Text str;
+            str.setPosition((i->pos - pos_in_) * zoom_ + pos_ + sf::Vector2f(RADIUS, RADIUS) * std::sqrt(zoom_));
             str.setString(std::to_string(i->val));
-            str.setTextColor(on_primary);
-            str.SetFontSize(letter_size * zoom_);
+            str.setFillColor(sf::Color::White);
+            str.setCharacterSize(letter_size);
+            str.setFont(font);
             target.draw(str);
         }
     }
@@ -97,7 +98,7 @@ void TreesDrawer::BeginTransaction() {
 void TreesDrawer::EndTransaction(const TreesDrawer::Node *new_root) {
     root_ = new_root;
     transaction_.unlock();
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+//    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 }
 
 std::vector<const TreesDrawer::Node*> TreesDrawer::AllNodes(const TreesDrawer::Node *root) {
@@ -152,9 +153,9 @@ void TreesDrawer::DoPhysics(const std::vector<const Node *> &nodes) const {
         }
         if (par != nullptr) {
             if (par->GetLeft() == i) {
-                acceleration.x -= G_FOR_CHILD_POWER * GetSubtreeSize(i);
+                acceleration.x -= G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i), 1.7);
             } else {
-                acceleration.x += G_FOR_CHILD_POWER * GetSubtreeSize(i);
+                acceleration.x += G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i), 1.7);
             }
         }
 
@@ -170,6 +171,14 @@ size_t TreesDrawer::GetSubtreeSize(const TreesDrawer::Node *root) {
         return 0;
     }
     return 1 + GetSubtreeSize(root->GetLeft()) + GetSubtreeSize(root->GetRight());
+}
+
+sf::Vector2f TreesDrawer::GetRandomPoint() {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_int_distribution<int> dist_x(0, win_size.x);
+    std::uniform_int_distribution<int> dist_y(0, win_size.y);
+    return sf::Vector2f(dist_x(gen), dist_y(gen));
 }
 
 

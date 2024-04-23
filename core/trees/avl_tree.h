@@ -58,24 +58,6 @@ private:
     std::unique_ptr<AvlNode> root_;
     std::mutex operation_;
 
-    template<class T>
-    void Insert(std::unique_ptr<AvlNode> &root, T &&v) {
-        if (root == nullptr) {
-            cb_begin_transaction_();
-            root = std::make_unique<AvlNode>(std::forward<T>(v));
-            cb_end_transaction_(root_.get());
-            UpdH(root);
-            return;
-        }
-        if (Cmp()(v, root->val)) {
-            Insert(root->left, std::forward<T>(v));
-        } else if (Cmp { } (root->val, v)) {
-            Insert(root->right, std::forward<T>(v));
-        }
-        UpdH(root);
-        Rebalance(root);
-    }
-
     static std::unique_ptr<AvlNode> Begin(std::unique_ptr<AvlNode> root) {
         return root ? root->l ? Begin(root->l) : root : nullptr;
     }
@@ -87,35 +69,6 @@ private:
         }
         if (root->right) {
             root->height = std::max(root->height, root->right->height + 1);
-        }
-    }
-
-    void Erase(std::unique_ptr<AvlNode> &root, Val val) {
-        if (root == nullptr) {
-            return;
-        } else if (Cmp { } (root->val, val)) {
-            Erase(root->right, val);
-            UpdH(root);
-            Rebalance(root);
-        } else if (Cmp { } (val, root->val)) {
-            Erase(root->left, val);
-            UpdH(root);
-            Rebalance(root);
-        } else if (root->left != nullptr && root->right != nullptr) {
-            cb_begin_transaction_();
-            root->val = Begin(root->right)->val;
-            cb_end_transaction_(root_.get());
-            Erase(root->right, root->val);
-            UpdH(root);
-            Rebalance(root);
-        } else if (root->left != nullptr) {
-            cb_begin_transaction_();
-            root = root->left;
-            cb_end_transaction_(root_.get());
-        } else {
-            cb_begin_transaction_();
-            root = root->right;
-            cb_end_transaction_(root_.get());
         }
     }
 
@@ -179,6 +132,53 @@ private:
             }
         } else {
             root = std::move(root_m);
+        }
+    }
+
+    template<class T>
+    void Insert(std::unique_ptr<AvlNode> &root, T &&v) {
+        if (root == nullptr) {
+            cb_begin_transaction_();
+            root = std::make_unique<AvlNode>(std::forward<T>(v));
+            cb_end_transaction_(root_.get());
+            UpdH(root);
+            return;
+        }
+        if (Cmp()(v, root->val)) {
+            Insert(root->left, std::forward<T>(v));
+        } else if (Cmp { } (root->val, v)) {
+            Insert(root->right, std::forward<T>(v));
+        }
+        UpdH(root);
+        Rebalance(root);
+    }
+
+    void Erase(std::unique_ptr<AvlNode> &root, Val val) {
+        if (root == nullptr) {
+            return;
+        } else if (Cmp { } (root->val, val)) {
+            Erase(root->right, val);
+            UpdH(root);
+            Rebalance(root);
+        } else if (Cmp { } (val, root->val)) {
+            Erase(root->left, val);
+            UpdH(root);
+            Rebalance(root);
+        } else if (root->left != nullptr && root->right != nullptr) {
+            cb_begin_transaction_();
+            root->val = Begin(root->right)->val;
+            cb_end_transaction_(root_.get());
+            Erase(root->right, root->val);
+            UpdH(root);
+            Rebalance(root);
+        } else if (root->left != nullptr) {
+            cb_begin_transaction_();
+            root = root->left;
+            cb_end_transaction_(root_.get());
+        } else {
+            cb_begin_transaction_();
+            root = root->right;
+            cb_end_transaction_(root_.get());
         }
     }
 };

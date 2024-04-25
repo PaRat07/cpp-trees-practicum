@@ -23,15 +23,22 @@ void TreesDrawer::ProcessEvent(sf::Event event) {
                     grabbed_ = i;
                 }
             }
+            if (grabbed_ == nullptr) {
+                grabbed_pos_in_.emplace(event.mouseButton.x, event.mouseButton.y);
+            }
             break;
         }
         case sf::Event::MouseButtonReleased: {
             grabbed_ = nullptr;
+            grabbed_pos_in_.reset();
             break;
         }
         case sf::Event::MouseMoved: {
             if (grabbed_ != nullptr) {
                 grabbed_->pos = sf::Vector2f((event.mouseMove.x - pos_.x) / zoom_ + pos_in_.x, (event.mouseMove.y - pos_.y) / zoom_ + pos_in_.y);
+            } else if (grabbed_pos_in_) {
+                pos_in_ -= sf::Vector2f((event.mouseMove.x - grabbed_pos_in_->x) / zoom_, (event.mouseMove.y - grabbed_pos_in_->y) / zoom_);
+                grabbed_pos_in_.emplace(event.mouseMove.x, event.mouseMove.y);
             }
             break;
         }
@@ -77,6 +84,7 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
             sf::CircleShape vertex(RADIUS * std::sqrt(zoom_));
             vertex.setPosition((i->pos - pos_in_) * zoom_ + pos_ - sf::Vector2f(RADIUS, RADIUS) * std::sqrt(zoom_));
             vertex.setFillColor(primary);
+            vertex.setPointCount(100);
             target.draw(vertex);
         }
         {
@@ -153,9 +161,9 @@ void TreesDrawer::DoPhysics(const std::vector<const Node *> &nodes) const {
         }
         if (par != nullptr) {
             if (par->GetLeft() == i) {
-                acceleration.x -= G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i), 1.7);
+                acceleration.x -= G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i), 1.9);
             } else {
-                acceleration.x += G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i), 1.7);
+                acceleration.x += G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i), 1.9);
             }
         }
 

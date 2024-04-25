@@ -41,15 +41,15 @@ private:
     float zoom_ = 1;
     sf::Vector2f pos_, size_, pos_in_;
     const Node *root_;
+    std::optional<sf::Vector2f> grabbed_pos_in_;
     const Node *grabbed_ = nullptr;
     mutable std::mutex transaction_;
     mutable std::chrono::steady_clock::time_point prev_draw_;
 
     static constexpr float RADIUS = 50;
-    static constexpr float K_FOR_EDGES = 50;
+    static constexpr float K_FOR_EDGES = 40;
     static constexpr float G_FOR_GRAVITY = 10;
     static constexpr float G_FOR_CHILD_POWER = 4;
-    static constexpr float G_FOR_EDGES = 5;
     static constexpr float G_FOR_VERTEX = 10;
     static constexpr float M_OF_VERTEX = 1e4;
 

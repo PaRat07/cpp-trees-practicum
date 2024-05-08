@@ -58,8 +58,8 @@ private:
     static constexpr float RADIUS = 50;
     static constexpr float K_FOR_EDGES = 40;
     static constexpr float G_FOR_GRAVITY = 10;
-    static constexpr float G_FOR_CHILD_POWER = 1;
-    static constexpr float G_FOR_VERTEX = 10;
+    static constexpr float G_FOR_CHILD_POWER = 0.5;
+    static constexpr float G_FOR_VERTEX = 300;
     static constexpr float M_OF_VERTEX = 1e4;
 
     static std::vector<const BaseNode*> AllNodes(const BaseNode *root);

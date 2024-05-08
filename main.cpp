@@ -9,19 +9,13 @@ long animation_time = 1500;
 
 int main() {
     Tab tab;
-    AvlSet avl_set;
-    auto drawer = std::make_unique<TreesDrawer>(sf::Vector2f(10, 10), sf::Vector2f(980, 980), reinterpret_cast<const TreesDrawer::Node*>(avl_set.GetRoot().get()));
+    std::shared_ptr<AvlSet<>> avl_set = std::make_shared<AvlSet<>>();
+    auto drawer = std::make_unique<TreesDrawer>(sf::Vector2f(10, 10), sf::Vector2f(980, 980), avl_set);
     int new_elem = 0;
-    avl_set.SetCallBacks([&drawer = *drawer] () {
-        drawer.BeginTransaction();
-    },
-[&drawer = *drawer] (const AvlSet<>::AvlNode *new_root) {
-        drawer.EndTransaction(reinterpret_cast<const TreesDrawer::Node*>(new_root));
-    });
     tab.AddElement(std::make_unique<ButtonWithTextAbsPos>(sf::Vector2f(10, 10), sf::Vector2f(70, 45), "Add",
-                                                        [&new_elem, &drawer = *drawer, &avl_set] () {
-        std::thread([&] () {
-            for (int i = 0; i < 10; ++i) avl_set.Insert(++new_elem);
+                                                        [&new_elem, &avl_set] {
+        std::thread([&new_elem, &avl_set] {
+            for (int i = 0; i < 10; ++i) avl_set->Insert(++new_elem);
         }).detach();
     }));
     tab.AddElement(std::move(drawer));

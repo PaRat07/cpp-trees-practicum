@@ -1,65 +1,68 @@
 #include "../physics/tree_drawer.h"
+#include "../../drawers/button.h"
+#include "../../drawers/inoutput_field.h"
 
 #include <functional>
+#include <mutex>
 
-using Val = int64_t;
 
-
-template<class Cmp = std::less<>>
-class AvlSet {
+template<class Val = int64_t, class Cmp = std::less<>>
+class AvlSet : public TreeInterface<Val, Cmp> {
 public:
-    struct AvlNode : public TreesDrawer::Node {
+    struct AvlNode : public BaseNode {
         AvlNode(int64_t val)
-            : TreesDrawer::Node(val)
-        {}
+            : BaseNode(val)
+        {
+        }
 
-        const TreesDrawer::Node *GetLeft() const override {
+        const BaseNode *GetLeft() const override {
             return left.get();
         }
-        const TreesDrawer::Node *GetRight() const override {
+        const BaseNode *GetRight() const override {
             return right.get();
         }
 
-        void ProcessEvent(sf::Event event) override {
-
-        }
-
-        void draw(sf::RenderTarget& target, sf::RenderStates states) const override {
-
+        std::string GetInfo() const override {
+            return "Height: " + std::to_string(height);
         }
 
         int height = 1;
         std::unique_ptr<AvlNode> left, right;
     };
 
-    template<class T>
-    void Insert(T &&v) {
-        std::lock_guard lock(operation_);
-        Insert(root_, std::forward<T>(v));
+    void Insert(const Val &v) override {
+        std::lock_guard lock(operation_mutex_);
+        Insert(root_, std::move(v));
     }
 
-    void Erase(Val v) {
-        std::lock_guard lock(operation_);
+    void Erase(const Val &v) override {
+        std::lock_guard lock(operation_mutex_);
         Erase(root_, v);
     }
 
-    const std::unique_ptr<AvlNode> &GetRoot() const {
-        return root_;
+    const BaseNode *GetRoot() const {
+        return dynamic_cast<const BaseNode*>(root_.get());
     }
 
-    void SetCallBacks(std::function<void()> &&cb_beg, std::function<void(const AvlNode*)> &&cb_end) {
-        cb_begin_transaction_ = std::move(cb_beg);
-        cb_end_transaction_ = std::move(cb_end);
+    void lock() override {
+        drawing_mutex_.lock();
+    }
+
+    void unlock() override {
+        drawing_mutex_.unlock();
     }
 
 private:
-    std::function<void()> cb_begin_transaction_ = [] () {};
-    std::function<void(const AvlNode*)> cb_end_transaction_ = [] (const AvlNode*) {};
     std::unique_ptr<AvlNode> root_;
-    std::mutex operation_;
+    std::mutex drawing_mutex_;
+    std::mutex operation_mutex_;
 
-    static std::unique_ptr<AvlNode> Begin(std::unique_ptr<AvlNode> root) {
-        return root ? root->l ? Begin(root->l) : root : nullptr;
+    static const std::unique_ptr<AvlNode> &Begin(const std::unique_ptr<AvlNode> &root) {
+        return root->left ? Begin(root->left) : root;
+    }
+
+    static std::unique_ptr<AvlNode> &Begin(std::unique_ptr<AvlNode> &root) {
+        return root->left ? Begin(root->left) : root;
     }
 
     static void UpdH(std::unique_ptr<AvlNode> &root) {
@@ -84,7 +87,7 @@ private:
         std::unique_ptr<AvlNode> root_m = std::move(root);
         if (Diff(root_m) == 2) {
             if (Diff(root_m->left) == -1) {
-                cb_begin_transaction_();
+                std::lock_guard lock(*this);
                 std::unique_ptr<AvlNode> new_root = std::move(root_m->left->right);
                 root_m->left->right = std::move(new_root->left);
                 new_root->left = std::move(root_m->left);
@@ -94,9 +97,8 @@ private:
                 UpdH(new_root->right);
                 UpdH(new_root);
                 root = std::move(new_root);
-                cb_end_transaction_(root_.get());
             } else {
-                cb_begin_transaction_();
+                std::lock_guard lock(*this);
                 std::unique_ptr<AvlNode> new_root = std::move(root_m->left);
                 root_m->left = std::move(new_root->right);
                 new_root->right = std::move(root_m);
@@ -104,11 +106,10 @@ private:
                 UpdH(new_root->right);
                 UpdH(new_root);
                 root = std::move(new_root);
-                cb_end_transaction_(root_.get());
             }
         } else if (Diff(root_m) == -2) {
             if (Diff(root_m->right) == 1) {
-                cb_begin_transaction_();
+                std::lock_guard lock(*this);
                 std::unique_ptr<AvlNode> new_root = std::move(root_m->right->left);
                 root_m->right->left = std::move(new_root->right);
                 new_root->right = std::move(root_m->right);
@@ -118,9 +119,8 @@ private:
                 UpdH(new_root->left);
                 UpdH(new_root);
                 root = std::move(new_root);
-                cb_end_transaction_(root_.get());
             } else {
-                cb_begin_transaction_();
+                std::lock_guard lock(*this);
                 std::unique_ptr<AvlNode> new_root = std::move(root_m->right);
                 root_m->right = std::move(new_root->left);
                 new_root->left = std::move(root_m);
@@ -128,7 +128,6 @@ private:
                 UpdH(new_root->right);
                 UpdH(new_root);
                 root = std::move(new_root);
-                cb_end_transaction_(root_.get());
             }
         } else {
             root = std::move(root_m);
@@ -138,9 +137,8 @@ private:
     template<class T>
     void Insert(std::unique_ptr<AvlNode> &root, T &&v) {
         if (root == nullptr) {
-            cb_begin_transaction_();
+            std::lock_guard lock(*this);
             root = std::make_unique<AvlNode>(std::forward<T>(v));
-            cb_end_transaction_(root_.get());
             UpdH(root);
             return;
         }
@@ -165,20 +163,19 @@ private:
             UpdH(root);
             Rebalance(root);
         } else if (root->left != nullptr && root->right != nullptr) {
-            cb_begin_transaction_();
-            root->val = Begin(root->right)->val;
-            cb_end_transaction_(root_.get());
+            {
+                std::lock_guard lock(*this);
+                root->val = Begin(root->right)->val;
+            }
             Erase(root->right, root->val);
             UpdH(root);
             Rebalance(root);
         } else if (root->left != nullptr) {
-            cb_begin_transaction_();
-            root = root->left;
-            cb_end_transaction_(root_.get());
+            std::lock_guard lock(*this);
+            root = std::move(root->left);
         } else {
-            cb_begin_transaction_();
-            root = root->right;
-            cb_end_transaction_(root_.get());
+            std::lock_guard lock(*this);
+            root = std::move(root->right);
         }
     }
 };

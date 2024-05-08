@@ -4,58 +4,66 @@
 #include <chrono>
 #include <cmath>
 #include <random>
+#include <functional>
 
 #include "../../app/tab.h"
 #include "vector_operations.h"
 #include "../../drawers/center_positioned_string.h"
 #include "../../drawers/line.h"
 
-class TreesDrawer : public AbstractDrawer {
+
+struct BaseNode {
+    BaseNode(int64_t v);
+
+    friend class TreesDrawer;
+    virtual const BaseNode *GetLeft() const = 0;
+    virtual const BaseNode *GetRight() const = 0;
+    virtual std::string GetInfo() const = 0;
+    int64_t val;
+    sf::Color color;
+
+private:
+    mutable sf::Vector2f speed = {0, 0};
+    mutable sf::Vector2f pos = GetRandomPoint();
+    static sf::Vector2f GetRandomPoint();
+};
+
+template<typename Val = int64_t, typename Cmp = std::less<>>
+class TreeInterface {
 public:
+    virtual void Insert(const Val &val) = 0;
+    virtual void Erase(const Val &val) = 0;
+    virtual void lock() = 0;
+    virtual void unlock() = 0;
+    virtual const BaseNode *GetRoot() const = 0;
+};
 
-    struct Node : public AbstractDrawer {
-        Node(int64_t v);
-
-        friend class TreesDrawer;
-        virtual const Node *GetLeft() const = 0;
-        virtual const Node *GetRight() const = 0;
-        int64_t val;
-        sf::Color color;
-
-    private:
-        mutable sf::Vector2f speed = {0, 0};
-        mutable sf::Vector2f pos = GetRandomPoint();
-    };
-
-    TreesDrawer(sf::Vector2f pos, sf::Vector2f size, const Node *root);
+class TreesDrawer final : public AbstractDrawer {
+public:
+    TreesDrawer(sf::Vector2f pos, sf::Vector2f size, std::shared_ptr<TreeInterface<>> tree);
 
     void ProcessEvent(sf::Event event) override;
 
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
-    void BeginTransaction();
-
-    void EndTransaction(const Node *new_root);
-
 private:
     float zoom_ = 1;
     sf::Vector2f pos_, size_, pos_in_;
-    const Node *root_;
+    std::shared_ptr<TreeInterface<>> tree_;
     std::optional<sf::Vector2f> grabbed_pos_in_;
-    const Node *grabbed_ = nullptr;
-    mutable std::mutex transaction_;
+    const BaseNode* active_node_ = nullptr;
+    const BaseNode *grabbed_ = nullptr;
     mutable std::chrono::steady_clock::time_point prev_draw_;
 
     static constexpr float RADIUS = 50;
     static constexpr float K_FOR_EDGES = 40;
     static constexpr float G_FOR_GRAVITY = 10;
-    static constexpr float G_FOR_CHILD_POWER = 4;
+    static constexpr float G_FOR_CHILD_POWER = 1;
     static constexpr float G_FOR_VERTEX = 10;
     static constexpr float M_OF_VERTEX = 1e4;
 
-    static std::vector<const Node*> AllNodes(const Node *root);
-    static size_t GetSubtreeSize(const Node *root);
-    static sf::Vector2f GetRandomPoint();
+    static std::vector<const BaseNode*> AllNodes(const BaseNode *root);
+    static size_t GetSubtreeSize(const BaseNode *root);
 
-    void DoPhysics(const std::vector<const Node*> &nodes) const;
+    void DoPhysics(const std::vector<const BaseNode*> &nodes) const;
 };

@@ -96,7 +96,7 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
             str.setPosition((i->pos - pos_in_) * zoom_ + pos_ + sf::Vector2f(RADIUS, RADIUS) * std::sqrt(zoom_));
             str.setString(std::to_string(i->val));
             str.setFillColor(sf::Color::White);
-            str.setCharacterSize(letter_size);
+            str.setCharacterSize(12);
             str.setFont(font);
             target.draw(str);
         }
@@ -155,24 +155,24 @@ void TreesDrawer::DoPhysics(const std::vector<const BaseNode *> &nodes) const {
         }
         // l child
         if (i->GetLeft() != nullptr) {
-            acceleration += sf::Vector2f(-(i->pos.x - i->GetLeft()->pos.x) * (K_FOR_EDGES * GetSubtreeSize(i->GetLeft())) / M_OF_VERTEX,
-                                         -(i->pos.y - i->GetLeft()->pos.y) * (K_FOR_EDGES * GetSubtreeSize(i->GetLeft())) / M_OF_VERTEX);
+            acceleration += sf::Vector2f(-(i->pos.x - i->GetLeft()->pos.x) * (K_FOR_EDGES * GetSubtreeSize(i->GetLeft()) / (0.05 * pow(nodes.size(), 1))) / M_OF_VERTEX,
+                                         -(i->pos.y - i->GetLeft()->pos.y) * (K_FOR_EDGES * GetSubtreeSize(i->GetLeft()) / (0.05 * pow(nodes.size(), 1))) / M_OF_VERTEX);
         }
         // r child
         if (i->GetRight() != nullptr) {
-            acceleration += sf::Vector2f(-(i->pos.x - i->GetRight()->pos.x) * (K_FOR_EDGES * GetSubtreeSize(i->GetLeft())) / M_OF_VERTEX,
-                                         -(i->pos.y - i->GetRight()->pos.y) * (K_FOR_EDGES * GetSubtreeSize(i->GetLeft())) / M_OF_VERTEX);
+            acceleration += sf::Vector2f(-(i->pos.x - i->GetRight()->pos.x) * (K_FOR_EDGES * GetSubtreeSize(i->GetRight()) / (0.05 * pow(nodes.size(), 1))) / M_OF_VERTEX,
+                                         -(i->pos.y - i->GetRight()->pos.y) * (K_FOR_EDGES * GetSubtreeSize(i->GetRight()) / (0.05 * pow(nodes.size(), 1))) / M_OF_VERTEX);
         }
         // par
         if (par != nullptr) {
-            acceleration += sf::Vector2f(-(i->pos.x - par->pos.x) * (K_FOR_EDGES * GetSubtreeSize(i)) / M_OF_VERTEX,
-                                         -(i->pos.y - par->pos.y) * (K_FOR_EDGES * GetSubtreeSize(i)) / M_OF_VERTEX);
+            acceleration += sf::Vector2f(-(i->pos.x - par->pos.x) * (K_FOR_EDGES * pow(GetSubtreeSize(i), 1) / (0.05 * pow(nodes.size(), 1))) / M_OF_VERTEX,
+                                         -(i->pos.y - par->pos.y) * (K_FOR_EDGES * pow(GetSubtreeSize(i), 1) / (0.05 * pow(nodes.size(), 1))) / M_OF_VERTEX);
         }
         if (par != nullptr) {
             if (par->GetLeft() == i) {
-                acceleration.x -= G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i), 2.5);
+                acceleration.x -= G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i), 2.3);
             } else {
-                acceleration.x += G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i), 2.5);
+                acceleration.x += G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i), 2.3);
             }
         }
 

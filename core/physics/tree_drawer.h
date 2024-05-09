@@ -5,12 +5,13 @@
 #include <cmath>
 #include <random>
 #include <functional>
+#include <mutex>
 
 #include "../../app/tab.h"
 #include "vector_operations.h"
+#include "../../drawers/button.h"
 #include "../../drawers/center_positioned_string.h"
 #include "../../drawers/line.h"
-
 
 struct BaseNode {
     BaseNode(int64_t v);
@@ -40,18 +41,20 @@ public:
 
 class TreesDrawer final : public AbstractDrawer {
 public:
-    TreesDrawer(sf::Vector2f pos, sf::Vector2f size, std::shared_ptr<TreeInterface<>> tree);
+    TreesDrawer(sf::Vector2f pos, sf::Vector2f size, std::string title, std::shared_ptr<TreeInterface<>> tree);
 
     void ProcessEvent(sf::Event event) override;
 
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
 private:
+    std::string title_;
     float zoom_ = 1;
     sf::Vector2f pos_, size_, pos_in_;
     std::shared_ptr<TreeInterface<>> tree_;
+    mutable std::optional<ButtonWithTextRelativePos> erase_button_;
     std::optional<sf::Vector2f> grabbed_pos_in_;
-    const BaseNode* active_node_ = nullptr;
+    mutable const BaseNode* active_node_ = nullptr;
     const BaseNode *grabbed_ = nullptr;
     mutable std::chrono::steady_clock::time_point prev_draw_;
 
@@ -65,5 +68,5 @@ private:
     static std::vector<const BaseNode*> AllNodes(const BaseNode *root);
     static size_t GetSubtreeSize(const BaseNode *root);
 
-    void DoPhysics(const std::vector<const BaseNode*> &nodes) const;
+    void DoPhysics(std::vector<const BaseNode *> nodes) const;
 };

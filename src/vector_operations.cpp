@@ -13,3 +13,9 @@ sf::Vector2f operator*(sf::Vector2f v, float k) {
     v.y *= k;
     return v;
 }
+
+sf::Vector2f operator/(sf::Vector2f v, float k) {
+    v.x /= k;
+    v.y /= k;
+    return v;
+}

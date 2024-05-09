@@ -9,3 +9,5 @@ float CalcSqLength(sf::Vector2f vector);
 float CalcLength(sf::Vector2f vector);
 
 sf::Vector2f operator*(sf::Vector2f v, float k);
+
+sf::Vector2f operator/(sf::Vector2f v, float k);

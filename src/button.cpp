@@ -101,6 +101,6 @@ void ButtonWithTextAbsPos::ProcessEvent(sf::Event event) {
 ButtonWithTextAbsPos::ButtonWithTextAbsPos(sf::Vector2f pos, sf::Vector2f sz, std::string text, std::function<void()> cb)
         : callback_(std::move(cb))
         , size_(sz)
-        , pos_(pos.x - sz.x / 2, pos.y - sz.y / 2)
+        , pos_(pos)
         , text_(std::move(text))
 {}

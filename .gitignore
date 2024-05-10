@@ -2,3 +2,5 @@
 /cmake-build-release/
 /.idea/
 /.cache/
+/cmake-build-release-mingw/
+/cmake-build-debug-mingw/

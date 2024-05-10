@@ -19,6 +19,7 @@ set(CORE
         src/tree_drawer.cpp
         src/vector_operations.cpp
         src/avl_tree.cpp
+        core/trees/splay_tree.h
 )
 
 add_executable(${PROJECT_NAME}

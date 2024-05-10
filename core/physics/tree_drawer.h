@@ -52,7 +52,7 @@ private:
     float zoom_ = 1;
     sf::Vector2f pos_, size_, pos_in_;
     std::shared_ptr<TreeInterface<>> tree_;
-    mutable std::optional<ButtonWithTextRelativePos> erase_button_;
+    mutable std::optional<ButtonWithTextAbsPos> erase_button_;
     std::optional<sf::Vector2f> grabbed_pos_in_;
     mutable const BaseNode* active_node_ = nullptr;
     const BaseNode *grabbed_ = nullptr;

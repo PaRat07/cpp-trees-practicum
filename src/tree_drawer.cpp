@@ -35,7 +35,7 @@ void TreesDrawer::ProcessEvent(sf::Event event) {
                 if (CalcLength((i->pos - pos_in_) * zoom_ - touch_pos) <= RADIUS * std::sqrt(zoom_)) {
                     grabbed_ = i;
                     active_node_ = i;
-                    erase_button_.emplace(real_pos + sf::Vector2f(real_size.x - 115, 55), sf::Vector2f(100,  40), "Erase", [&] {
+                    erase_button_.emplace(real_pos + sf::Vector2f(real_size.x - 115, 80), sf::Vector2f(100,  40), "Erase", [&] {
                         int64_t val = active_node_->val;
                         active_node_ = nullptr;
                         erase_button_.reset();
@@ -239,9 +239,9 @@ void TreesDrawer::DoPhysics(std::vector<const BaseNode *> nodes) const {
         }
         if (par != nullptr) {
             if (par->GetLeft() == i) {
-                acceleration.x -= G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i), 2.3);
+                acceleration.x -= G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i) + 1, 2.3);
             } else {
-                acceleration.x += G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i), 2.3);
+                acceleration.x += G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i) + 1, 2.3);
             }
         }
 

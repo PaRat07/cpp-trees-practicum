@@ -142,15 +142,15 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
     }
     if (active_node_ != nullptr) {
         {
-            RoundedRectangleShape rect(sf::Vector2f(120, 120));
+            RoundedRectangleShape rect(sf::Vector2f(150, 120));
             rect.setFillColor(surface_container_highest);
             rect.setRoundRadius(10);
-            rect.setPosition(sf::Vector2f(real_size.x - 125, 5));
+            rect.setPosition(sf::Vector2f(real_size.x - 155, 5));
             texture.draw(rect);
         }
         {
             sf::Text info;
-            info.setPosition(real_size.x - 115, 5);
+            info.setPosition(real_size.x - 145, 5);
             info.setString(active_node_->GetInfo());
             info.setFillColor(sf::Color::White);
             info.setCharacterSize(15);
@@ -164,7 +164,7 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
     sprite.setPosition(real_pos);
     target.draw(sprite);
     if (erase_button_.has_value()) {
-        erase_button_.emplace(real_pos + sf::Vector2f(real_size.x - 115, 55), sf::Vector2f(100,  40), "Erase", [&] {
+        erase_button_.emplace(real_pos + sf::Vector2f(real_size.x - 145, 75), sf::Vector2f(130,  40), "Erase", [&] {
                         int64_t val = active_node_->val;
                         active_node_ = nullptr;
                         erase_button_.reset();

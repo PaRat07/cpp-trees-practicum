@@ -110,14 +110,14 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
     for (const auto &i : nodes) {
         if (i->GetLeft()) {
             LineShape line((i->pos - pos_in_) * zoom_, (i->GetLeft()->pos - pos_in_) * zoom_);
-            line.setFillColor(sf::Color::Red);
-            line.setThickness(5);
+            line.setFillColor(outline_variant);
+            line.setThickness(2);
             texture.draw(line);
         }
         if (i->GetRight()) {
             LineShape line((i->pos - pos_in_) * zoom_, (i->GetRight()->pos - pos_in_) * zoom_);
-            line.setFillColor(sf::Color::Red);
-            line.setThickness(5);
+            line.setFillColor(outline_variant);
+            line.setThickness(2);
             texture.draw(line);
         }
     }

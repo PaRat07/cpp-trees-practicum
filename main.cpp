@@ -17,9 +17,12 @@ int main() {
     std::shared_ptr<CartesianSet> ct_set = std::make_shared<CartesianSet>();
     int new_elem = 0;
     tab.AddElement(std::make_unique<ButtonWithTextRelativePos>(sf::Vector2f(5, 155), sf::Vector2f(190, 45), "Insert 10",
-                                                        [&new_elem, &avl_set] {
-        std::thread([&new_elem, &avl_set] {
-            for (int i = 0; i < 10; ++i) avl_set->Insert(++new_elem);
+                                                        [&new_elem, &avl_set, &ct_set] {
+        std::thread([&new_elem, &avl_set, &ct_set] {
+            for (int i = 0; i < 10; ++i) {
+                avl_set->Insert(++new_elem);
+                ct_set->Insert(new_elem);
+            }
         }).detach();
     }));
     {
@@ -27,8 +30,10 @@ int main() {
         auto mt_val = std::make_unique<InputField>(sf::Vector2f(5, 55), sf::Vector2f(190, 45), "mt19937");
         tab.AddElement(std::make_unique<ButtonWithTextRelativePos>(sf::Vector2f(5, 105), sf::Vector2f(185 / 2, 45), "Insert",
             [new_elem = &*elem, &avl_set, mt_val = &mt_val, &ct_set] {
-                avl_set->Insert(std::stoll(new_elem->GetText()));
-                ct_set->Insert(std::stoll(new_elem->GetText()));
+                try {
+                    avl_set->Insert(std::stoll(new_elem->GetText()));
+                    ct_set->Insert(std::stoll(new_elem->GetText()));
+                } catch (...) {}
         }));
 
         tab.AddElement(std::make_unique<ButtonWithTextRelativePos>(sf::Vector2f(10 + 185 / 2, 105), sf::Vector2f(185 / 2, 45), "Erase",
@@ -41,8 +46,8 @@ int main() {
     }
 
     tab.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f(200, 5), sf::Vector2f((1000 - 200 - 5 - 5) / 2, (1000 - 15) / 2), "AVL", avl_set));
-    tab.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f((1000 - 200 - 5 - 5) / 2 + 200 + 5, 5), sf::Vector2f((1000 - 200 - 5 - 5) / 2, (1000 - 15) / 2), "RB", avl_set));
-    tab.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f(200, (1000 - 15) / 2 + 10), sf::Vector2f((1000 - 200 - 5 - 5) / 2, (1000 - 15) / 2), "SPLAY", avl_set));
+    // tab.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f((1000 - 200 - 5 - 5) / 2 + 200 + 5, 5), sf::Vector2f((1000 - 200 - 5 - 5) / 2, (1000 - 15) / 2), "RB", avl_set));
+    // tab.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f(200, (1000 - 15) / 2 + 10), sf::Vector2f((1000 - 200 - 5 - 5) / 2, (1000 - 15) / 2), "SPLAY", avl_set));
     tab.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f((1000 - 200 - 5 - 5) / 2 + 200 + 5, (1000 - 15) / 2 + 10), sf::Vector2f((1000 - 200 - 5 - 5) / 2, (1000 - 15) / 2), "PIWO", ct_set));
 
     WindowManager wm(std::move(tab));

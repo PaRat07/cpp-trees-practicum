@@ -75,7 +75,7 @@ void TreesDrawer::ProcessEvent(sf::Event event) {
         }
         case sf::Event::TextEntered: {
             // ctrl + h
-            if (event.text.unicode == 8) {
+            if (event.text.unicode == 8 && tree_->GetRoot() != nullptr) {
                 pos_in_ = tree_->GetRoot()->pos - real_size * 0.5;
             }
         }

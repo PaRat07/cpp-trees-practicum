@@ -23,11 +23,11 @@ int main() {
         std::thread([&avl_set, &ct_set, &splay_set] {
             static std::random_device rd;
             static std::mt19937 gen(rd());
-            for (int i = 0; i < 50; ++i) {
+            for (int i = 0; i < 30; ++i) {
                 int new_elem = std::uniform_int_distribution<int>(1, 1000)(gen);
-                avl_set->Insert(++new_elem);
+                avl_set->Insert(new_elem);
                 ct_set->Insert(new_elem);
-                // splay_set->Insert(new_elem);
+                splay_set->Insert(new_elem);
             }
         }).detach();
     }));

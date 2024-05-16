@@ -7,10 +7,10 @@ double TabsManager::GetPercantage(double time_gone) {
 
 void TabsManager::ProcessEvent(sf::Event event) {
     switch (event.type) {
-        case sf::Event::TextEntered: {
+        case sf::Event::KeyPressed: {
             // ctrl + tab
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LControl) &&
-                event.text.unicode == 9) {
+                sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Tab)) {
                 if (tab_.size() <= 1) return;
                 anim_ = Animation   {
                         .from = active_,
@@ -29,6 +29,11 @@ void TabsManager::ProcessEvent(sf::Event event) {
         case sf::Event::MouseMoved:
             event.mouseMove.x -= pos_.x * win_size.x;
             event.mouseMove.y -= pos_.y * win_size.y;
+            tab_[active_].ProcessEvent(event);
+            break;
+        case sf::Event::MouseWheelScrolled:
+            event.mouseWheelScroll.x -= pos_.x * win_size.x;
+            event.mouseWheelScroll.y -= pos_.y * win_size.y;
             tab_[active_].ProcessEvent(event);
             break;
         default: {

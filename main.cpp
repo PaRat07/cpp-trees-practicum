@@ -1,3 +1,4 @@
+#include "app/tabs_drawer.h"
 #include "core/physics/tree_drawer.h"
 #include "core/trees/avl_tree.h"
 #include "core/trees/rb_tree.h"
@@ -24,7 +25,7 @@ int main() {
         std::thread([&avl_set, &ct_set, &splay_set, rb_set] {
             static std::random_device rd;
             static std::mt19937 gen(rd());
-            for (int i = 0; i < 500; ++i) {
+            for (int i = 0; i < 30; ++i) {
                 int new_elem = std::uniform_int_distribution<int>(1, 1'000'000)(gen);
 
                 avl_set->Insert(new_elem);ct_set->Insert(new_elem);splay_set->Insert(new_elem);rb_set->Insert(new_elem);continue;
@@ -55,11 +56,38 @@ int main() {
 
         tab.AddElement(std::move(elem));
     }
-
-    tab.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f(200, 5), sf::Vector2f((1000 - 200 - 5 - 5) / 2, (1000 - 15) / 2), "AVL", avl_set));
-    tab.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f((1000 - 200 - 5 - 5) / 2 + 200 + 5, 5), sf::Vector2f((1000 - 200 - 5 - 5) / 2, (1000 - 15) / 2), "RB", rb_set));
-    tab.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f(200, (1000 - 15) / 2 + 10), sf::Vector2f((1000 - 200 - 5 - 5) / 2, (1000 - 15) / 2), "SPLAY", splay_set));
-    tab.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f((1000 - 200 - 5 - 5) / 2 + 200 + 5, (1000 - 15) / 2 + 10), sf::Vector2f((1000 - 200 - 5 - 5) / 2, (1000 - 15) / 2), "PIWO", ct_set));
+    {
+        auto tm = std::make_unique<TabsManager>(sf::Vector2f(195, 5), sf::Vector2f(1000 - 195 - 5, 990));
+        {
+            Tab all_trees;
+            all_trees.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f(5, 5), sf::Vector2f((1000 - 195 - 5 - 10) / 2, (1000 - 15) / 2), "AVL", avl_set));
+            all_trees.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f((1000 - 195 - 5 - 15) / 2 + 10, 5), sf::Vector2f((1000 - 200 - 5 - 5) / 2, (1000 - 15) / 2), "RB", rb_set));
+            all_trees.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f(5, (990 - 15) / 2 + 10), sf::Vector2f((1000 - 200 - 5 - 5) / 2, (1000 - 15) / 2), "SPLAY", splay_set));
+            all_trees.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f((1000 - 195 - 5 - 15) / 2 + 10, (990 - 15) / 2 + 10), sf::Vector2f((1000 - 200 - 5 - 5) / 2, (1000 - 15) / 2), "PIWO", ct_set));
+            tm->AddTab(std::move(all_trees));
+        }
+        {
+            Tab avl_tab;
+            avl_tab.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f(5, 5), sf::Vector2f(1000 - 200 - 10, 980), "AVL", avl_set));
+            tm->AddTab(std::move(avl_tab));
+        }
+        {
+            Tab ct_tab;
+            ct_tab.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f(5, 5), sf::Vector2f(1000 - 200 - 10, 980), "PIWO", ct_set));
+            tm->AddTab(std::move(ct_tab));
+        }
+        {
+            Tab rb_tab;
+            rb_tab.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f(5, 5), sf::Vector2f(1000 - 200 - 10, 980), "RB", rb_set));
+            tm->AddTab(std::move(rb_tab));
+        }
+        {
+            Tab splay_tab;
+            splay_tab.AddElement(std::make_unique<TreesDrawer>(sf::Vector2f(5, 5), sf::Vector2f(1000 - 200 - 10, 980), "Splay", splay_set));
+            tm->AddTab(std::move(splay_tab));
+        }
+        tab.AddElement(std::move(tm));
+    }
 
     WindowManager wm(std::move(tab));
     wm.Start();

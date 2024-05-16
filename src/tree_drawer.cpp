@@ -95,10 +95,10 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
 
     sf::RenderTexture texture;
     texture.create(real_size.x, real_size.y);
-    texture.clear(surface);
+    texture.clear(surface_container);
     {
         RoundedRectangleShape rect(sf::Vector2f(real_size.x, real_size.y));
-        rect.setFillColor(surface_container);
+        rect.setFillColor(surface_container_highest);
         rect.setRoundRadius(10);
         rect.setPosition(sf::Vector2f(0, 0));
         texture.draw(rect);

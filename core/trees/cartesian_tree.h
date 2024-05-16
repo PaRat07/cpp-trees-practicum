@@ -9,7 +9,7 @@ typedef std::unique_ptr<CtNode> CartezianTree;
 
 int64_t Rand();
 
-struct CtNode : public BaseNode {
+struct CtNode final : public BaseNode {
     explicit CtNode(int64_t v);
 
     const BaseNode *GetLeft() const override;
@@ -34,7 +34,7 @@ std::pair<CartezianTree, CartezianTree> SplitK(CartezianTree tr, int64_t k);
 
 CartezianTree Merge(CartezianTree l, CartezianTree r);
 
-class CartesianSet : public TreeInterface<> {
+class CartesianSet final : public TreeInterface<> {
 public:
     void Insert(const int64_t &val) override;
     void Erase(const int64_t &val) override;

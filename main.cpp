@@ -24,8 +24,10 @@ int main() {
         std::thread([&avl_set, &ct_set, &splay_set, rb_set] {
             static std::random_device rd;
             static std::mt19937 gen(rd());
-            for (int i = 0; i < 50; ++i) {
-                int new_elem = std::uniform_int_distribution<int>(1, 1000)(gen);
+            for (int i = 0; i < 500; ++i) {
+                int new_elem = std::uniform_int_distribution<int>(1, 1'000'000)(gen);
+
+                avl_set->Insert(new_elem);ct_set->Insert(new_elem);splay_set->Insert(new_elem);rb_set->Insert(new_elem);continue;
 
                 std::thread avl_ins([&avl_set, new_elem] { avl_set->Insert(new_elem); });
                 std::thread ct_ins([&ct_set, new_elem] { ct_set->Insert(new_elem); });
@@ -41,7 +43,7 @@ int main() {
 
     {
         auto elem = std::make_unique<InputField>(sf::Vector2f(5, 5), sf::Vector2f(190, 45), "Value");
-        tab.AddElement(std::make_unique<ButtonWithTextRelativePos>(sf::Vector2f(5, 105), sf::Vector2f(190, 45), "Insert",
+        tab.AddElement(std::make_unique<ButtonWithTextRelativePos>(sf::Vector2f(5, 105), sf::Vector2f(185 / 2, 45), "Insert",
             [new_elem = &*elem, &avl_set, &ct_set, &splay_set, rb_set] {
                 try {
                     avl_set->Insert(std::stoll(new_elem->GetText()));

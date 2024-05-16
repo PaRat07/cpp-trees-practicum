@@ -2,6 +2,8 @@
 #include <thread>
 #include "../core/physics/tree_drawer.h"
 
+#include <future>
+
 
 BaseNode::BaseNode(int64_t v)
         : val(v)
@@ -32,7 +34,7 @@ void TreesDrawer::ProcessEvent(sf::Event event) {
             active_node_ = nullptr;
             erase_button_.reset();
             for (const auto &i: nodes) {
-                if (CalcLength((i->pos - pos_in_) * zoom_ - touch_pos) <= RADIUS * std::sqrt(zoom_)) {
+                if (CalcLength((i->pos - pos_in_) * zoom_ - touch_pos) <= RADIUS * std::pow(zoom_, 0.3)) {
                     grabbed_ = i;
                     active_node_ = i;
                     erase_button_.emplace(real_pos + sf::Vector2f(real_size.x - 115, 80), sf::Vector2f(100,  40), "Erase", [&] {
@@ -86,15 +88,10 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
     sf::Vector2f real_pos(pos_.x * win_size.x, pos_.y * win_size.y);
     sf::Vector2f real_size(size_.x * win_size.x, size_.y * win_size.y);
     std::lock_guard lock(*tree_);
-    auto nodes = AllNodes(tree_->GetRoot());
-    for (const auto &i : nodes) {
-        for (const auto &j : nodes) {
-            if (i == j) continue;
-            if (i->pos == j->pos) {
-                i->pos += sf::Vector2f(5, 5);
-            }
-        }
-    }
+
+    auto get_nodes = std::async([&] () {
+        return AllNodes(tree_->GetRoot());
+    });
 
     sf::RenderTexture texture;
     texture.create(real_size.x, real_size.y);
@@ -105,6 +102,17 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
         rect.setRoundRadius(10);
         rect.setPosition(sf::Vector2f(0, 0));
         texture.draw(rect);
+    }
+
+    auto nodes = get_nodes.get();
+
+    for (const auto &i : nodes) {
+        for (const auto &j : nodes) {
+            if (i == j) continue;
+            if (i->pos == j->pos) {
+                i->pos += sf::Vector2f(5, 5);
+            }
+        }
     }
 
     for (const auto &i : nodes) {
@@ -124,15 +132,15 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
 
     for (const auto &i : nodes) {
         {
-            sf::CircleShape vertex(RADIUS * std::sqrt(zoom_));
-            vertex.setPosition((i->pos - pos_in_) * zoom_ - sf::Vector2f(RADIUS, RADIUS) * std::sqrt(zoom_));
+            sf::CircleShape vertex(RADIUS * std::pow(zoom_, 0.3));
+            vertex.setPosition((i->pos - pos_in_) * zoom_ - sf::Vector2f(RADIUS, RADIUS) * std::pow(zoom_, 0.3));
             vertex.setFillColor(primary);
-            vertex.setPointCount(100);
+            // vertex.setPointCount(100);
             texture.draw(vertex);
         }
         {
             sf::Text str;
-            str.setPosition((i->pos - pos_in_) * zoom_ + sf::Vector2f(RADIUS, RADIUS) * std::sqrt(zoom_));
+            str.setPosition((i->pos - pos_in_) * zoom_ + sf::Vector2f(RADIUS, RADIUS) * std::pow(zoom_, 0.3));
             str.setString(std::to_string(i->val));
             str.setFillColor(sf::Color::White);
             str.setCharacterSize(12);
@@ -140,6 +148,8 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
             texture.draw(str);
         }
     }
+    std::thread([&] (std::vector<const BaseNode*> nodes) { DoPhysics(nodes); }, std::move(nodes)).detach();
+
     if (active_node_ != nullptr) {
         {
             RoundedRectangleShape rect(sf::Vector2f(150, 120));
@@ -158,11 +168,13 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
             texture.draw(info);
         }
     }
+
     sf::Sprite sprite;
     texture.display();
     sprite.setTexture(texture.getTexture());
     sprite.setPosition(real_pos);
     target.draw(sprite);
+
     if (erase_button_.has_value()) {
         erase_button_.emplace(real_pos + sf::Vector2f(real_size.x - 145, 75), sf::Vector2f(130,  40), "Erase", [&] {
                         int64_t val = active_node_->val;
@@ -181,9 +193,6 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
         title.setFont(font);
         target.draw(title);
     }
-    DoPhysics(std::move(nodes));
-    // TODO: add multithreading
-    // std::thread(DoPhysics, std::move(nodes)).detach();
 }
 
 std::vector<const BaseNode*> TreesDrawer::AllNodes(const BaseNode *root) {
@@ -210,7 +219,7 @@ void TreesDrawer::DoPhysics(std::vector<const BaseNode *> nodes) const {
     for (auto *i : nodes) {
         if (i == tree_->GetRoot() || i == grabbed_) continue;
 
-        sf::Vector2f acceleration(0, G_FOR_GRAVITY);
+        sf::Vector2f acceleration(0, G_FOR_GRAVITY * std::pow(nodes.size(), 0.5));
 
         const BaseNode *par = nullptr;
         for (auto *j : nodes) {
@@ -239,14 +248,14 @@ void TreesDrawer::DoPhysics(std::vector<const BaseNode *> nodes) const {
         }
         if (par != nullptr) {
             if (par->GetLeft() == i) {
-                acceleration.x -= G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i) + 1, 2.3);
+                acceleration.x -= G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i) * GetSubtreeSize(par->GetRight()) + 4, 1.2);
             } else {
-                acceleration.x += G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i) + 1, 2.3);
+                acceleration.x += G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i) * GetSubtreeSize(par->GetLeft()) + 4, 1.2);
             }
         }
 
         i->speed += acceleration * time_gone;
-        i->speed = i->speed * std::pow(0.95, time_gone);
+        i->speed = i->speed * std::pow(0.85, time_gone);
         i->pos += i->speed * time_gone;
     }
     prev_draw_ = time;

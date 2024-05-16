@@ -7,6 +7,7 @@ void WindowManager::Start() {
     bool close = false;
     auto displayer = std::async([&] () {
         win.setVerticalSyncEnabled(true);
+        auto time = std::chrono::steady_clock::now();
         while (true) {
             if (close) {
                 win.close();
@@ -15,6 +16,10 @@ void WindowManager::Start() {
             win.clear(surface);
             win.draw(tab_);
             win.display();
+            auto now = std::chrono::steady_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - time).count();
+            std::cerr << 1000. / elapsed << std::endl;
+            time = now;
         }
     });
 

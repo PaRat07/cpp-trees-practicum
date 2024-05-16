@@ -49,7 +49,7 @@ public:
 
 private:
     std::string title_;
-    float zoom_ = 1;
+    float zoom_ = 0.1;
     sf::Vector2f pos_, size_, pos_in_;
     std::shared_ptr<TreeInterface<>> tree_;
     mutable std::optional<ButtonWithTextAbsPos> erase_button_;
@@ -61,7 +61,7 @@ private:
     static constexpr float RADIUS = 50;
     static constexpr float K_FOR_EDGES = 40;
     static constexpr float G_FOR_GRAVITY = 10;
-    static constexpr float G_FOR_CHILD_POWER = 1;
+    static constexpr float G_FOR_CHILD_POWER = 1.5;
     static constexpr float G_FOR_VERTEX = 300;
     static constexpr float M_OF_VERTEX = 1e4;
 

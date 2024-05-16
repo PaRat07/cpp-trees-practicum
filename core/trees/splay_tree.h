@@ -3,9 +3,9 @@
 #include "../physics/tree_drawer.h"
 
 template<typename Val = int64_t, typename Cmp = std::less<>>
-class SplaySet : public TreeInterface<Val, Cmp> {
+class SplaySet final : public TreeInterface<Val, Cmp> {
 public:
-    class Node : public BaseNode {
+    class Node final : public BaseNode {
     public:
         Node(const Val &val)
             : BaseNode(val)

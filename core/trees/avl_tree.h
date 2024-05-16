@@ -8,9 +8,9 @@
 
 
 template<class Val = int64_t, class Cmp = std::less<>>
-class AvlSet : public TreeInterface<Val, Cmp> {
+class AvlSet final : public TreeInterface<Val, Cmp> {
 public:
-    struct AvlNode : public BaseNode {
+    struct AvlNode final : public BaseNode {
         AvlNode(int64_t val)
             : BaseNode(val)
         {

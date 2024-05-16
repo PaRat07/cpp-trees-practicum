@@ -3,9 +3,9 @@
 #include "../physics/tree_drawer.h"
 
 
-class RBTree : public TreeInterface<> {
+class RBTree final : public TreeInterface<> {
     public:
-    struct Node : public BaseNode {
+    struct Node final : public BaseNode {
         Node(int64_t v)
             : BaseNode(v)
         {

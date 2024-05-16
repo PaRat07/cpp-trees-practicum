@@ -28,7 +28,7 @@ public:
 
 
     void Insert(const Val &key) override {
-        std::lock_guard lock(mutex_);
+        std::lock_guard lock(operation_mutex_);
         if (root_ == nullptr) {
             root_ = std::make_unique<Node>(key);
             return;
@@ -48,7 +48,7 @@ public:
     }
 
     void Erase(const Val &val) override {
-        std::lock_guard lock(mutex_);
+        std::lock_guard lock(operation_mutex_);
         if (root_ == nullptr) return;
         auto x = Find(root_, val);
         if (x == nullptr) return;
@@ -60,11 +60,11 @@ public:
     }
 
     void lock() override {
-        mutex_.lock();
+        drawing_mutex_.lock();
     }
 
     void unlock() override {
-        mutex_.unlock();
+        drawing_mutex_.unlock();
     }
 
     const BaseNode *GetRoot() const override {
@@ -72,6 +72,12 @@ public:
     }
 
 private:
+
+    static constexpr auto OPERATION_DELAY = std::chrono::milliseconds(1500 * 0);
+
+    static void HoldMutex(std::unique_lock<std::mutex> lock) {
+        std::this_thread::sleep_for(OPERATION_DELAY);
+    }
 
     void Splay(std::unique_ptr<Node> &root, int64_t key) {
         if (root == nullptr || root->val == key) return;
@@ -108,18 +114,24 @@ private:
 
     // 卐
     void Zig(std::unique_ptr<Node> &x) {
+        std::unique_lock lock_turn(turn_mutex_);
+        std::lock_guard lock_draw(drawing_mutex_);
         auto y = std::move(x->left);
         x->left = std::move(y->right);
         y->right = std::move(x);
         x = std::move(y);
+        std::thread(HoldMutex, std::move(lock_turn)).detach();
     }
 
     // not-卐
     void Zag(std::unique_ptr<Node> &x) {
+        std::unique_lock lock_turn(turn_mutex_);
+        std::lock_guard lock_draw(drawing_mutex_);
         auto y = std::move(x->right);
         x->right = std::move(y->left);
         y->left = std::move(x);
         x = std::move(y);
+        std::thread(HoldMutex, std::move(lock_turn)).detach();
     }
 
     std::unique_ptr<Node> *Find(std::unique_ptr<Node> &root, int64_t key) {
@@ -139,5 +151,7 @@ private:
     }
 
     std::unique_ptr<Node> root_;
-    std::mutex mutex_;
+    std::mutex drawing_mutex_;
+    std::mutex operation_mutex_;
+    std::mutex turn_mutex_;
 };

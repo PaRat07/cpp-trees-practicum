@@ -48,8 +48,15 @@ public:
     }
 
     void Erase(const Val &val) override {
-        // FIXME
-        throw std::runtime_error("Not implemented");
+        std::lock_guard lock(mutex_);
+        if (root_ == nullptr) return;
+        auto x = Find(root_, val);
+        if (x == nullptr) return;
+        Splay(root_, val);
+        auto l = std::move(root_->left), r = std::move(root_->right);
+        Splay(r, (*GetMin(r))->val);
+        r->left = std::move(l);
+        root_ = std::move(r);
     }
 
     void lock() override {
@@ -113,6 +120,22 @@ private:
         x->right = std::move(y->left);
         y->left = std::move(x);
         x = std::move(y);
+    }
+
+    std::unique_ptr<Node> *Find(std::unique_ptr<Node> &root, int64_t key) {
+        if (root == nullptr) return nullptr;
+        if (root->val == key) return &root;
+        if (root->val > key) {
+            return Find(root->left, key);
+        } else {
+            return Find(root->right, key);
+        }
+    }
+
+    std::unique_ptr<Node> *GetMin(std::unique_ptr<Node> &root) {
+        if (root == nullptr) return nullptr;
+        if (root->left == nullptr) return &root;
+        return GetMin(root->left);
     }
 
     std::unique_ptr<Node> root_;

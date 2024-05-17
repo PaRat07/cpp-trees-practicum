@@ -58,7 +58,7 @@ void TreesDrawer::ProcessEvent(sf::Event event) {
         }
         case sf::Event::MouseMoved: {
             if (grabbed_ != nullptr) {
-                grabbed_->pos = sf::Vector2f((event.mouseMove.x - real_pos.x) / zoom_ + pos_in_.x, (event.mouseMove.y - real_pos.y) / zoom_ + pos_in_.y);
+                grabbed_->pos = sf::Vector2<double>((event.mouseMove.x - real_pos.x) / zoom_ + pos_in_.x, (event.mouseMove.y - real_pos.y) / zoom_ + pos_in_.y);
             } else if (grabbed_pos_in_) {
                 pos_in_ -= sf::Vector2f((event.mouseMove.x - grabbed_pos_in_->x) / zoom_, (event.mouseMove.y - grabbed_pos_in_->y) / zoom_);
                 grabbed_pos_in_.emplace(event.mouseMove.x, event.mouseMove.y);
@@ -78,7 +78,8 @@ void TreesDrawer::ProcessEvent(sf::Event event) {
         case sf::Event::TextEntered: {
             // ctrl + h
             if (event.text.unicode == 8 && tree_->GetRoot() != nullptr) {
-                pos_in_ = tree_->GetRoot()->pos - real_size * 0.5;
+                auto v = tree_->GetRoot()->pos - real_size * 0.5;
+                pos_in_ = { (float)v.x, (float)v.y };
             }
         }
     }
@@ -110,7 +111,7 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
         for (const auto &j : nodes) {
             if (i == j) continue;
             if (i->pos == j->pos) {
-                i->pos += sf::Vector2f(5, 5);
+                i->pos += sf::Vector2<double>(5, 5);
             }
         }
     }
@@ -133,7 +134,7 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
     for (const auto &i : nodes) {
         {
             sf::CircleShape vertex(RADIUS * std::pow(zoom_, 0.3));
-            vertex.setPosition((i->pos - pos_in_) * zoom_ - sf::Vector2f(RADIUS, RADIUS) * std::pow(zoom_, 0.3));
+            vertex.setPosition(Cast((i->pos - pos_in_) * zoom_ - sf::Vector2f(RADIUS, RADIUS) * std::pow(zoom_, 0.3)));
             // vertex.setFillColor(primary);
             vertex.setFillColor(i->color);
             // vertex.setPointCount(100);
@@ -141,7 +142,7 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
         }
         {
             sf::Text str;
-            str.setPosition((i->pos - pos_in_) * zoom_ + sf::Vector2f(RADIUS, RADIUS) * std::pow(zoom_, 0.3));
+            str.setPosition(Cast((i->pos - pos_in_) * zoom_ + sf::Vector2f(RADIUS, RADIUS) * std::pow(zoom_, 0.3)));
             str.setString(std::to_string(i->val));
             str.setFillColor(sf::Color::White);
             str.setCharacterSize(12);
@@ -220,7 +221,7 @@ void TreesDrawer::DoPhysics(std::vector<const BaseNode *> nodes) const {
     for (auto *i : nodes) {
         if (i == tree_->GetRoot() || i == grabbed_) continue;
 
-        sf::Vector2f acceleration(0, G_FOR_GRAVITY * std::pow(nodes.size(), 0.5));
+        sf::Vector2<double> acceleration(0, G_FOR_GRAVITY * std::pow(nodes.size(), 0.5));
 
         const BaseNode *par = nullptr;
         for (auto *j : nodes) {
@@ -229,22 +230,22 @@ void TreesDrawer::DoPhysics(std::vector<const BaseNode *> nodes) const {
                 par = j;
             }
             float force = M_OF_VERTEX * G_FOR_VERTEX / CalcSqLength(j->pos - i->pos);
-            acceleration += sf::Vector2f(-(j->pos.x - i->pos.x) / CalcLength(j->pos - i->pos) * force,
+            acceleration += sf::Vector2<double>(-(j->pos.x - i->pos.x) / CalcLength(j->pos - i->pos) * force,
                                          -(j->pos.y - i->pos.y) / CalcLength(j->pos - i->pos) * force);
         }
         // l child
         if (i->GetLeft() != nullptr) {
-            acceleration += sf::Vector2f(-(i->pos.x - i->GetLeft()->pos.x) * (K_FOR_EDGES * GetSubtreeSize(i->GetLeft()) / (0.05 * pow(nodes.size(), 1))) / M_OF_VERTEX,
+            acceleration += sf::Vector2<double>(-(i->pos.x - i->GetLeft()->pos.x) * (K_FOR_EDGES * GetSubtreeSize(i->GetLeft()) / (0.05 * pow(nodes.size(), 1))) / M_OF_VERTEX,
                                          -(i->pos.y - i->GetLeft()->pos.y) * (K_FOR_EDGES * GetSubtreeSize(i->GetLeft()) / (0.05 * pow(nodes.size(), 1))) / M_OF_VERTEX);
         }
         // r child
         if (i->GetRight() != nullptr) {
-            acceleration += sf::Vector2f(-(i->pos.x - i->GetRight()->pos.x) * (K_FOR_EDGES * GetSubtreeSize(i->GetRight()) / (0.05 * pow(nodes.size(), 1))) / M_OF_VERTEX,
+            acceleration += sf::Vector2<double>(-(i->pos.x - i->GetRight()->pos.x) * (K_FOR_EDGES * GetSubtreeSize(i->GetRight()) / (0.05 * pow(nodes.size(), 1))) / M_OF_VERTEX,
                                          -(i->pos.y - i->GetRight()->pos.y) * (K_FOR_EDGES * GetSubtreeSize(i->GetRight()) / (0.05 * pow(nodes.size(), 1))) / M_OF_VERTEX);
         }
         // par
         if (par != nullptr) {
-            acceleration += sf::Vector2f(-(i->pos.x - par->pos.x) * (K_FOR_EDGES * pow(GetSubtreeSize(i), 1) / (0.05 * pow(nodes.size(), 1))) / M_OF_VERTEX,
+            acceleration += sf::Vector2<double>(-(i->pos.x - par->pos.x) * (K_FOR_EDGES * pow(GetSubtreeSize(i), 1) / (0.05 * pow(nodes.size(), 1))) / M_OF_VERTEX,
                                          -(i->pos.y - par->pos.y) * (K_FOR_EDGES * pow(GetSubtreeSize(i), 1) / (0.05 * pow(nodes.size(), 1))) / M_OF_VERTEX);
         }
         if (par != nullptr) {
@@ -274,7 +275,7 @@ sf::Vector2<double> BaseNode::GetRandomPoint() {
     static std::mt19937 gen(rd());
     std::uniform_int_distribution<int> dist_x( 0, win_size.x);
     std::uniform_int_distribution<int> dist_y(0, win_size.y);
-    return sf::Vector2f(dist_x(gen), dist_y(gen));
+    return sf::Vector2<double>(dist_x(gen), dist_y(gen));
 }
 
 

@@ -5,7 +5,7 @@
 
 class LineShape : public sf::Drawable {
 public:
-    LineShape(sf::Vector2f from, sf::Vector2f to)
+    LineShape(sf::Vector2<double> from, sf::Vector2<double> to)
         : from_(from)
         , to_(to)
     {}
@@ -21,7 +21,7 @@ public:
     void draw(sf::RenderTarget& target, sf::RenderStates states) const override {
         sf::Vector2f v(to_ - from_);
         sf::Vector2f norm(v.y, - v.x);
-        norm *= thickness / 2 / CalcLength(norm);
+        norm *= (float)(thickness / 2 / CalcLength(norm));
         sf::Vector2f lu(from_ - norm), ld(from_ + norm), ru(to_ - norm), rd(to_ + norm);
         sf::ConvexShape convex;
         convex.setPointCount(4);

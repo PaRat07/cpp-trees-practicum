@@ -24,7 +24,8 @@ public:
         }
 
         std::string GetInfo() const override {
-            return "Height: " + std::to_string(height);
+            return "Val: " + std::to_string(val) +
+                   "\nHeight: " + std::to_string(height);
         }
 
         int height = 1;

@@ -56,5 +56,5 @@ private:
     std::mutex turn_mtx_;
     std::mutex operation_mtx_;
 
-    static constexpr auto OPERATION_DELAY = std::chrono::milliseconds(1500 * 0);
+    static constexpr auto OPERATION_DELAY = std::chrono::milliseconds(1500);
 };

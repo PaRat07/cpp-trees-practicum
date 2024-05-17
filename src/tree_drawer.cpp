@@ -98,7 +98,7 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
     texture.clear(surface_container);
     {
         RoundedRectangleShape rect(sf::Vector2f(real_size.x, real_size.y));
-        rect.setFillColor(surface_container_highest);
+        rect.setFillColor(surface_container_high);
         rect.setRoundRadius(10);
         rect.setPosition(sf::Vector2f(0, 0));
         texture.draw(rect);
@@ -248,9 +248,9 @@ void TreesDrawer::DoPhysics(std::vector<const BaseNode *> nodes) const {
         }
         if (par != nullptr) {
             if (par->GetLeft() == i) {
-                acceleration.x -= G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i) * GetSubtreeSize(par->GetRight()) + 4, 1.2);
+                acceleration.x -= G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i) * GetSubtreeSize(par->GetRight()) + GetSubtreeSize(i) * 5, 1.3);
             } else {
-                acceleration.x += G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i) * GetSubtreeSize(par->GetLeft()) + 4, 1.2);
+                acceleration.x += G_FOR_CHILD_POWER * std::pow(GetSubtreeSize(i) * GetSubtreeSize(par->GetLeft()) + GetSubtreeSize(i) * 5, 1.3);
             }
         }
 

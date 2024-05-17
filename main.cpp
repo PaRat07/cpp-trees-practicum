@@ -20,12 +20,13 @@ int main() {
     std::shared_ptr<AvlSet<>> avl_set = std::make_shared<AvlSet<>>();
     std::shared_ptr<CartesianSet> ct_set = std::make_shared<CartesianSet>();
 
-    tab.AddElement(std::make_unique<ButtonWithTextRelativePos>(sf::Vector2f(5, 155), sf::Vector2f(190, 45), "Insert 20",
-                                                        [&avl_set, &ct_set, &splay_set, rb_set] {
-        std::thread([&avl_set, &ct_set, &splay_set, rb_set] {
+    auto n = std::make_unique<InputField>(sf::Vector2f(140, 105), sf::Vector2f(200 - 140 - 5, 45), "N");
+    tab.AddElement(std::make_unique<ButtonWithTextRelativePos>(sf::Vector2f(5, 105), sf::Vector2f(130, 45), "Insert N",
+                                                        [&avl_set, &ct_set, &splay_set, rb_set, &n] {
+        std::thread([&avl_set, &ct_set, &splay_set, rb_set, &n] {
             static std::random_device rd;
             static std::mt19937 gen(rd());
-            for (int i = 0; i < 30; ++i) {
+            for (int i = 0; i < std::stoll(n->GetText()); ++i) {
                 int new_elem = std::uniform_int_distribution<int>(1, 1'000'000)(gen);
 
                 avl_set->Insert(new_elem);ct_set->Insert(new_elem);splay_set->Insert(new_elem);rb_set->Insert(new_elem);continue;
@@ -41,10 +42,11 @@ int main() {
             }
         }).detach();
     }));
+    tab.AddElement(std::move(n));
 
     {
         auto elem = std::make_unique<InputField>(sf::Vector2f(5, 5), sf::Vector2f(190, 45), "Value");
-        tab.AddElement(std::make_unique<ButtonWithTextRelativePos>(sf::Vector2f(5, 105), sf::Vector2f(185 / 2, 45), "Insert",
+        tab.AddElement(std::make_unique<ButtonWithTextRelativePos>(sf::Vector2f(5, 55), sf::Vector2f(190, 45), "Insert",
             [new_elem = &*elem, &avl_set, &ct_set, &splay_set, rb_set] {
                 try {
                     avl_set->Insert(std::stoll(new_elem->GetText()));

@@ -25,7 +25,6 @@ set(CORE
 
 add_executable(${PROJECT_NAME}
         main.cpp
-        src/table_drawer.cpp
         src/window.cpp
         src/button.cpp
         src/center_positioned_string.cpp
@@ -34,7 +33,6 @@ add_executable(${PROJECT_NAME}
         app/colors.h
         src/colors.cpp
         src/inoutput_field.cpp
-        src/table_drawer.cpp
         src/rounded_rectangle.cpp
         src/tabs_drawer.cpp
         ${CORE}

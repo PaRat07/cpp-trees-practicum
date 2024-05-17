@@ -26,20 +26,6 @@ void RBTree::HoldMutex(std::unique_lock<std::mutex> lock) {
     std::this_thread::sleep_for(OPERATION_DELAY);
 }
 
-void RBTree::Insert(const int64_t &val) {
-    std::lock_guard lock(operation_mtx_);
-    if (Find(root_, val) != nullptr) {
-        return;
-    }
-    if (root_ == nullptr) {
-        root_ = new Node(val);
-    } else {
-        Ins(root_, val);
-    }
-    if (root_->color == sf::Color::Red) {
-        root_->color = sf::Color::Black;
-    }
-}
 
 void RBTree::Erase(const int64_t &val) {
     Delete(val);
@@ -318,4 +304,19 @@ RBTree::Node *RBTree::GetMin(Node *a) {
         return a;
     }
     return GetMin(a->l);
+}
+
+void RBTree::Insert(const int64_t &val) {
+    std::lock_guard lock(operation_mtx_);
+    if (Find(root_, val) != nullptr) {
+        return;
+    }
+    if (root_ == nullptr) {
+        root_ = new Node(val);
+    } else {
+        Ins(root_, val);
+    }
+    if (root_->color == sf::Color::Red) {
+        root_->color = sf::Color::Black;
+    }
 }

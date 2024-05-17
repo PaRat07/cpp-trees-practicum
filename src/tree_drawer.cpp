@@ -150,7 +150,7 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
             texture.draw(str);
         }
     }
-    std::thread([&] (std::vector<const BaseNode*> nodes) { DoPhysics(nodes); }, std::move(nodes)).detach();
+    auto phys = std::thread([&] (std::vector<const BaseNode*> nodes) { DoPhysics(nodes); }, std::move(nodes));
 
     if (active_node_ != nullptr) {
         {
@@ -195,6 +195,7 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
         title.setFont(font);
         target.draw(title);
     }
+    phys.join();
 }
 
 std::vector<const BaseNode*> TreesDrawer::AllNodes(const BaseNode *root) {

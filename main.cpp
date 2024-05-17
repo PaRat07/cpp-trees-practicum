@@ -22,7 +22,7 @@ int main() {
 
     auto n = std::make_unique<InputField>(sf::Vector2f(140, 105), sf::Vector2f(200 - 140 - 5, 45), "N");
     tab.AddElement(std::make_unique<ButtonWithTextRelativePos>(sf::Vector2f(5, 105), sf::Vector2f(130, 45), "Insert N",
-                                                        [&avl_set, &ct_set, &splay_set, rb_set, &n] {
+                                                        [&avl_set, &ct_set, &splay_set, rb_set, n = n.get()] {
         std::thread([&avl_set, &ct_set, &splay_set, rb_set, &n] {
             static std::random_device rd;
             static std::mt19937 gen(rd());

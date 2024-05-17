@@ -165,8 +165,8 @@ void RBTree::InsRebalance(Node *a) {
 
 void RBTree::Delete(int64_t val) {
     auto q = Find(root_, val);
-    auto replase = GetMin(q->r);
-    if (replase == nullptr && q == root_) {
+    auto replace = GetMin(q->r);
+    if (replace == nullptr && q == root_) {
         root_ = (root_->l ? root_->l : nullptr);
         if (root_ != nullptr) {
             root_->prev = nullptr;
@@ -175,124 +175,124 @@ void RBTree::Delete(int64_t val) {
         delete q;
         return;
     }
-    if (replase == nullptr && q->l) {
+    if (replace == nullptr && q->l) {
         RightRotate(q);
         q->prev->r = nullptr;
         delete q;
         return;
     }
-    if (replase == nullptr) {
-        replase = q;
+    if (replace == nullptr) {
+        replace = q;
     }
 
-    q->val = replase->val;
+    q->val = replace->val;
 
-    if (replase->color == sf::Color::Red && !replase->l && !replase->r) {
-        if (replase->prev->l == replase) {
-            replase->prev->l = nullptr;
+    if (replace->color == sf::Color::Red && !replace->l && !replace->r) {
+        if (replace->prev->l == replace) {
+            replace->prev->l = nullptr;
         } else {
-            replase->prev->r = nullptr;
+            replace->prev->r = nullptr;
         }
-        delete replase;
+        delete replace;
         return;
     }
-    replase->is_empty = true;
-    replase->color = sf::Color::Magenta;
+    replace->is_empty = true;
+    replace->color = sf::Color::Magenta;
 
-    while (replase->color == sf::Color::Magenta) {
-        if (replase->prev == nullptr) {
-            replase->color = sf::Color::Black;
-            root_ = replase;
+    while (replace->color == sf::Color::Magenta) {
+        if (replace->prev == nullptr) {
+            replace->color = sf::Color::Black;
+            root_ = replace;
             break;
         }
         // проверка положения
-        if (replase->prev->l == replase) {
+        if (replace->prev->l == replace) {
             // first
-            if (GetColor(replase->prev->r) == sf::Color::Red &&
-                GetColor(replase->prev->r->l) == sf::Color::Black &&
-                GetColor(replase->prev->r->r) == sf::Color::Black) {
-                LeftRotate(replase->prev);
+            if (GetColor(replace->prev->r) == sf::Color::Red &&
+                GetColor(replace->prev->r->l) == sf::Color::Black &&
+                GetColor(replace->prev->r->r) == sf::Color::Black) {
+                LeftRotate(replace->prev);
             } else
             // second
-            if (GetColor(replase->prev->r) == sf::Color::Black &&
-                GetColor(replase->prev->r->l) == sf::Color::Black &&
-                GetColor(replase->prev->r->r) == sf::Color::Black) {
-                replase->prev->r->color = sf::Color::Red;
-                if (replase->prev->color == sf::Color::Red) {
-                    replase->prev->color = sf::Color::Black;
+            if (GetColor(replace->prev->r) == sf::Color::Black &&
+                GetColor(replace->prev->r->l) == sf::Color::Black &&
+                GetColor(replace->prev->r->r) == sf::Color::Black) {
+                replace->prev->r->color = sf::Color::Red;
+                if (replace->prev->color == sf::Color::Red) {
+                    replace->prev->color = sf::Color::Black;
                 } else {
-                    replase->prev->color = sf::Color::Magenta;
+                    replace->prev->color = sf::Color::Magenta;
                 }
-                auto e = replase->prev;
-                if (replase->is_empty) {
-                    replase->prev->l = nullptr;
-                    delete replase;
+                auto e = replace->prev;
+                if (replace->is_empty) {
+                    replace->prev->l = nullptr;
+                    delete replace;
                 } else {
-                    replase->color = sf::Color::Black;
+                    replace->color = sf::Color::Black;
                 }
-                replase = e;
+                replace = e;
             } else
             // third
-            if (GetColor(replase->prev->r) == sf::Color::Black &&
-                GetColor(replase->prev->r->l) == sf::Color::Red &&
-                GetColor(replase->prev->r->r) == sf::Color::Black) {
-                RightRotate(replase->prev->r);
+            if (GetColor(replace->prev->r) == sf::Color::Black &&
+                GetColor(replace->prev->r->l) == sf::Color::Red &&
+                GetColor(replace->prev->r->r) == sf::Color::Black) {
+                RightRotate(replace->prev->r);
             } else
             // fourth
-            if (GetColor(replase->prev->r) == sf::Color::Black &&
-                GetColor(replase->prev->r->r) == sf::Color::Red) {
-                LeftRotate(replase->prev);
-                replase->prev->prev->r->color = sf::Color::Black;
-                replase->color = sf::Color::Black;
-                auto e = replase;
-                if (replase->is_empty) {
+            if (GetColor(replace->prev->r) == sf::Color::Black &&
+                GetColor(replace->prev->r->r) == sf::Color::Red) {
+                LeftRotate(replace->prev);
+                replace->prev->prev->r->color = sf::Color::Black;
+                replace->color = sf::Color::Black;
+                auto e = replace;
+                if (replace->is_empty) {
                     e->prev->l = nullptr;
-                    delete replase;
+                    delete replace;
                 }
                 break;
             }
         } else {
             // first
-            if (GetColor(replase->prev->l) == sf::Color::Red &&
-                GetColor(replase->prev->l->l) == sf::Color::Black &&
-                GetColor(replase->prev->l->r) == sf::Color::Black) {
-                RightRotate(replase->prev);
+            if (GetColor(replace->prev->l) == sf::Color::Red &&
+                GetColor(replace->prev->l->l) == sf::Color::Black &&
+                GetColor(replace->prev->l->r) == sf::Color::Black) {
+                RightRotate(replace->prev);
             } else
             // second
-            if (GetColor(replase->prev->l) == sf::Color::Black &&
-                GetColor(replase->prev->l->l) == sf::Color::Black &&
-                GetColor(replase->prev->l->r) == sf::Color::Black) {
-                replase->prev->l->color = sf::Color::Red;
-                if (replase->prev->color == sf::Color::Red) {
-                    replase->prev->color = sf::Color::Black;
+            if (GetColor(replace->prev->l) == sf::Color::Black &&
+                GetColor(replace->prev->l->l) == sf::Color::Black &&
+                GetColor(replace->prev->l->r) == sf::Color::Black) {
+                replace->prev->l->color = sf::Color::Red;
+                if (replace->prev->color == sf::Color::Red) {
+                    replace->prev->color = sf::Color::Black;
                 } else {
-                    replase->prev->color = sf::Color::Magenta;
+                    replace->prev->color = sf::Color::Magenta;
                 }
-                auto e = replase->prev;
-                if (replase->is_empty) {
-                    replase->prev->r = nullptr;
-                    delete replase;
+                auto e = replace->prev;
+                if (replace->is_empty) {
+                    replace->prev->r = nullptr;
+                    delete replace;
                 } else {
-                    replase->color = sf::Color::Black;
+                    replace->color = sf::Color::Black;
                 }
-                replase = e;
+                replace = e;
             } else
             // third
-            if (GetColor(replase->prev->l) == sf::Color::Black &&
-                GetColor(replase->prev->l->r) == sf::Color::Red &&
-                GetColor(replase->prev->l->l) == sf::Color::Black) {
-                LeftRotate(replase->prev->l);
+            if (GetColor(replace->prev->l) == sf::Color::Black &&
+                GetColor(replace->prev->l->r) == sf::Color::Red &&
+                GetColor(replace->prev->l->l) == sf::Color::Black) {
+                LeftRotate(replace->prev->l);
             } else
             // fourth
-            if (GetColor(replase->prev->l) == sf::Color::Black &&
-                GetColor(replase->prev->l->l) == sf::Color::Red) {
-                RightRotate(replase->prev);
-                replase->prev->prev->l->color = sf::Color::Black;
-                replase->color = sf::Color::Black;
-                auto e = replase;
-                if (replase->is_empty) {
+            if (GetColor(replace->prev->l) == sf::Color::Black &&
+                GetColor(replace->prev->l->l) == sf::Color::Red) {
+                RightRotate(replace->prev);
+                replace->prev->prev->l->color = sf::Color::Black;
+                replace->color = sf::Color::Black;
+                auto e = replace;
+                if (replace->is_empty) {
                     e->prev->r = nullptr;
-                    delete replase;
+                    delete replace;
                 }
                 break;
             }

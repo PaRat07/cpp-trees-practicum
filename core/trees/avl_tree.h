@@ -60,7 +60,7 @@ private:
     std::mutex operation_mutex_;
     std::mutex turn_mutex_;
 
-    static constexpr auto OPERATION_DELAY = std::chrono::milliseconds(1500);
+    static constexpr auto OPERATION_DELAY = std::chrono::milliseconds(1500*0);
 
     static const std::unique_ptr<AvlNode> &Begin(const std::unique_ptr<AvlNode> &root) {
         return root->left ? Begin(root->left) : root;

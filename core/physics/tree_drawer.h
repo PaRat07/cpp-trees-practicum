@@ -21,12 +21,12 @@ struct BaseNode {
     virtual const BaseNode *GetRight() const = 0;
     virtual std::string GetInfo() const = 0;
     int64_t val;
-    sf::Color color;
+    sf::Color color = primary;
 
 private:
-    mutable sf::Vector2f speed = {0, 0};
-    mutable sf::Vector2f pos = GetRandomPoint();
-    static sf::Vector2f GetRandomPoint();
+    mutable sf::Vector2<double> speed = {0, 0};
+    mutable sf::Vector2<double> pos = GetRandomPoint();
+    static sf::Vector2<double> GetRandomPoint();
 };
 
 template<typename Val = int64_t, typename Cmp = std::less<>>
@@ -58,7 +58,7 @@ private:
     const BaseNode *grabbed_ = nullptr;
     mutable std::chrono::steady_clock::time_point prev_draw_;
 
-    static constexpr float RADIUS = 50;
+    static constexpr float RADIUS = 30;
     static constexpr float K_FOR_EDGES = 40;
     static constexpr float G_FOR_GRAVITY = 10;
     static constexpr float G_FOR_CHILD_POWER = 1.5;

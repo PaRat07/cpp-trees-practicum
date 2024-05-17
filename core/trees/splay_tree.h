@@ -73,7 +73,7 @@ public:
 
 private:
 
-    static constexpr auto OPERATION_DELAY = std::chrono::milliseconds(1500);
+    static constexpr auto OPERATION_DELAY = std::chrono::milliseconds(1500 * 0);
 
     static void HoldMutex(std::unique_lock<std::mutex> lock) {
         std::this_thread::sleep_for(OPERATION_DELAY);

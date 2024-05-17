@@ -20,7 +20,7 @@ class RBTree final : public TreeInterface<> {
             return r;
         }
         std::string GetInfo() const override {
-            return std::to_string(val);
+            return "Val: " + std::to_string(val) + "\nColor: " + (color == sf::Color::Red? "Red" : "Black");
         }
         Node *l = nullptr, *r = nullptr, *prev = nullptr;
         bool is_empty = false;
@@ -56,5 +56,5 @@ private:
     std::mutex turn_mtx_;
     std::mutex operation_mtx_;
 
-    static constexpr auto OPERATION_DELAY = std::chrono::milliseconds(1500);
+    static constexpr auto OPERATION_DELAY = std::chrono::milliseconds(1500 * 0);
 };

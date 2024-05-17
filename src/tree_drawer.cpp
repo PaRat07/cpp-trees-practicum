@@ -98,7 +98,7 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
     texture.clear(surface_container);
     {
         RoundedRectangleShape rect(sf::Vector2f(real_size.x, real_size.y));
-        rect.setFillColor(surface_container_high);
+        rect.setFillColor(surface_container_highest);
         rect.setRoundRadius(10);
         rect.setPosition(sf::Vector2f(0, 0));
         texture.draw(rect);
@@ -134,7 +134,8 @@ void TreesDrawer::draw(sf::RenderTarget &target, sf::RenderStates states) const 
         {
             sf::CircleShape vertex(RADIUS * std::pow(zoom_, 0.3));
             vertex.setPosition((i->pos - pos_in_) * zoom_ - sf::Vector2f(RADIUS, RADIUS) * std::pow(zoom_, 0.3));
-            vertex.setFillColor(primary);
+            // vertex.setFillColor(primary);
+            vertex.setFillColor(i->color);
             // vertex.setPointCount(100);
             texture.draw(vertex);
         }
@@ -255,7 +256,7 @@ void TreesDrawer::DoPhysics(std::vector<const BaseNode *> nodes) const {
         }
 
         i->speed += acceleration * time_gone;
-        i->speed = i->speed * std::pow(0.85, time_gone);
+        i->speed = i->speed * std::pow(0.95, time_gone);
         i->pos += i->speed * time_gone;
     }
     prev_draw_ = time;
@@ -268,7 +269,7 @@ size_t TreesDrawer::GetSubtreeSize(const BaseNode *root) {
     return 1 + GetSubtreeSize(root->GetLeft()) + GetSubtreeSize(root->GetRight());
 }
 
-sf::Vector2f BaseNode::GetRandomPoint() {
+sf::Vector2<double> BaseNode::GetRandomPoint() {
     static std::random_device rd;
     static std::mt19937 gen(rd());
     std::uniform_int_distribution<int> dist_x( 0, win_size.x);
